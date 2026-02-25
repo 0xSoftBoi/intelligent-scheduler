@@ -1,0 +1,1 @@
+"""No-meeting day enforcement."""
