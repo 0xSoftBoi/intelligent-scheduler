@@ -1,0 +1,130 @@
+# Intelligent Scheduler Configuration
+
+# Server Settings
+server:
+  host: 0.0.0.0
+  port: 8000
+  debug: true
+  log_level: INFO
+  allowed_origins:
+    - http://localhost:3000
+    - http://localhost:8000
+
+# Database Configuration
+database:
+  url: postgresql://user:password@localhost:5432/intelligent_scheduler
+  pool_size: 10
+  max_overflow: 20
+  echo: false
+
+# Google Calendar Integration
+google_calendar:
+  client_id: YOUR_GOOGLE_CLIENT_ID
+  client_secret: YOUR_GOOGLE_CLIENT_SECRET
+  redirect_uri: http://localhost:8000/auth/google/callback
+  scopes:
+    - https://www.googleapis.com/auth/calendar
+    - https://www.googleapis.com/auth/calendar.events
+
+# Microsoft Outlook Integration
+outlook:
+  client_id: YOUR_OUTLOOK_CLIENT_ID
+  client_secret: YOUR_OUTLOOK_CLIENT_SECRET
+  tenant_id: YOUR_TENANT_ID
+  redirect_uri: http://localhost:8000/auth/outlook/callback
+  scopes:
+    - https://graph.microsoft.com/Calendars.ReadWrite
+    - https://graph.microsoft.com/User.Read
+
+# Redis Configuration (for Celery)
+redis:
+  url: redis://localhost:6379/0
+  max_connections: 50
+
+# Celery Configuration
+celery:
+  broker_url: redis://localhost:6379/0
+  result_backend: redis://localhost:6379/1
+  task_serializer: json
+  result_serializer: json
+  accept_content:
+    - json
+  timezone: UTC
+  enable_utc: true
+
+# Machine Learning Models
+ml_models:
+  energy_prediction:
+    model_path: models/energy_predictor.pkl
+    retrain_interval_days: 7
+  productivity_prediction:
+    model_path: models/productivity_predictor.pkl
+    retrain_interval_days: 14
+
+# Optimization Settings
+optimization:
+  weights:
+    energy_score: 0.35
+    participant_availability: 0.25
+    time_preference: 0.15
+    priority: 0.15
+    grouping_efficiency: 0.10
+  max_optimization_time_seconds: 30
+  use_parallel_processing: true
+
+# No-Meeting Day Enforcement
+enforcement:
+  min_no_meeting_days_per_week: 1
+  min_focus_blocks_per_day: 2
+  focus_block_duration_minutes: 90
+  enforce_exceptions: false
+  allowed_exception_types:
+    - urgent
+    - executive
+
+# Communication Batching
+batching:
+  email:
+    max_batch_size: 50
+    preferred_duration_minutes: 30
+    batch_frequency_per_day: 3
+  slack:
+    max_batch_size: 100
+    preferred_duration_minutes: 20
+    batch_frequency_per_day: 4
+  meetings:
+    max_batch_size: 4
+    preferred_duration_minutes: 120
+    batch_frequency_per_day: 1
+
+# Webhook Settings
+webhooks:
+  secret_key: YOUR_WEBHOOK_SECRET_KEY
+  timeout_seconds: 30
+  retry_attempts: 3
+  retry_delay_seconds: 60
+
+# API Rate Limiting
+rate_limiting:
+  enabled: true
+  standard_limit: 100  # requests per minute
+  optimization_limit: 10
+  webhook_limit: 1000
+
+# Logging
+logging:
+  level: INFO
+  format: "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan> - <level>{message}</level>"
+  rotation: "100 MB"
+  retention: "30 days"
+  file: logs/intelligent_scheduler.log
+
+# Feature Flags
+features:
+  energy_analysis: true
+  meeting_optimization: true
+  communication_batching: true
+  no_meeting_enforcement: true
+  ml_predictions: true
+  calendar_sync: true
+  webhooks: true
