@@ -1,12 +1,13 @@
 """Webhook API routes."""
 
-from fastapi import APIRouter, HTTPException, Header, Request
+from fastapi import APIRouter, Depends, HTTPException, Header, Request
 from pydantic import BaseModel
 from typing import Optional
 from src.webhooks.webhook_handler import WebhookHandler, WebhookRegistry
 from src.core.config import get_settings
+from src.core.security import require_api_key
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_api_key)])
 settings = get_settings()
 handler = WebhookHandler(settings.WEBHOOK_SECRET_KEY)
 registry = WebhookRegistry()
@@ -27,20 +28,25 @@ async def calendar_webhook(
     """Receive calendar update webhooks."""
     try:
         body = await request.body()
-        
-        # Verify signature if provided
-        if x_signature and not handler.verify_signature(body, x_signature):
-            raise HTTPException(status_code=401, detail="Invalid signature")
-        
+
+        # Enforce signature verification when WEBHOOK_SECRET_KEY is configured
+        if settings.WEBHOOK_SECRET_KEY:
+            if not x_signature:
+                raise HTTPException(status_code=401, detail="X-Signature header required")
+            if not handler.verify_signature(body, x_signature):
+                raise HTTPException(status_code=403, detail="Invalid signature")
+
         # Parse event data
         event_data = await request.json()
-        
+
         # Handle event
         result = handler.handle_calendar_event(event_data)
-        
+
         return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/register")
@@ -54,5 +60,7 @@ async def register_webhook(registration: WebhookRegistration):
             registration.metadata
         )
         return subscription
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")

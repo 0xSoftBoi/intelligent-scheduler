@@ -1,7 +1,7 @@
 """Configuration management."""
 
 import os
-from typing import List
+from typing import List, Optional
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 
@@ -41,8 +41,8 @@ class Settings(BaseSettings):
     ENERGY_MODEL_PATH: str = "models/energy_predictor.pkl"
     PRODUCTIVITY_MODEL_PATH: str = "models/productivity_predictor.pkl"
     
-    # Webhook
-    WEBHOOK_SECRET_KEY: str = "your-secret-key-here"
+    # Webhook — set to enable signature verification; None disables verification (dev mode only)
+    WEBHOOK_SECRET_KEY: Optional[str] = None
     
     class Config:
         env_file = ".env"

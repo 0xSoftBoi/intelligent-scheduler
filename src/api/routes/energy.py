@@ -1,11 +1,12 @@
 """Energy analysis API routes."""
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from datetime import datetime
 from src.energy_analysis.energy_analyzer import EnergyAnalyzer
+from src.core.security import require_api_key
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_api_key)])
 analyzer = EnergyAnalyzer()
 
 
@@ -25,8 +26,10 @@ async def get_energy_patterns(user_id: str, days: int = 30):
     try:
         patterns = analyzer.analyze_historical_patterns(user_id, days)
         return patterns
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/predict")
@@ -44,5 +47,7 @@ async def predict_energy(request: EnergyPredictionRequest):
             "predicted_energy_level": energy_level,
             "confidence": 0.85
         }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")

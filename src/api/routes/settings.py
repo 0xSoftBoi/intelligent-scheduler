@@ -1,11 +1,12 @@
 """Settings API routes."""
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from src.enforcement.no_meeting_enforcer import NoMeetingEnforcer, BlockType
 from datetime import datetime
+from src.core.security import require_api_key
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_api_key)])
 enforcer = NoMeetingEnforcer()
 
 
@@ -33,8 +34,10 @@ async def configure_no_meeting_day(config: NoMeetingDayConfig):
             config.recurring
         )
         return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/block-time")
@@ -51,5 +54,7 @@ async def block_time(request: BlockTimeRequest):
             request.reason
         )
         return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")

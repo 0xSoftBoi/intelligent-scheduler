@@ -1,12 +1,13 @@
 """Schedule optimization API routes."""
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import List
 from datetime import datetime
 from src.optimization.meeting_optimizer import MeetingOptimizer, Meeting
+from src.core.security import require_api_key
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_api_key)])
 optimizer = MeetingOptimizer()
 
 
@@ -75,5 +76,7 @@ async def optimize_schedule(request: OptimizeScheduleRequest):
         }
         
         return serialized_result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")

@@ -1,12 +1,13 @@
 """Meeting management API routes."""
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 from src.batching.communication_batcher import CommunicationBatcher
+from src.core.security import require_api_key
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_api_key)])
 batcher = CommunicationBatcher()
 
 
@@ -28,8 +29,10 @@ async def batch_tasks(request: TaskBatchRequest):
     try:
         result = batcher.create_batches(request.tasks, request.user_id)
         return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/check-allowed")
@@ -47,5 +50,7 @@ async def check_meeting_allowed(request: MeetingAllowanceRequest):
             request.override_code
         )
         return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")
